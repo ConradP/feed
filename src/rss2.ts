@@ -8,7 +8,7 @@ import { sanitize } from "./utils";
  * Returns a RSS 2.0 feed
  */
 export default (ins: Feed) => {
-  const { options } = ins;
+  const { options, extensions } = ins;
   let isAtom = false;
   let isContent = false;
 
@@ -51,7 +51,7 @@ export default (ins: Feed) => {
     base.rss.channel.image = {
       title: { _text: options.title },
       url: { _text: options.image },
-      link: { _text: sanitize(options.link) }
+      link: { _text: sanitize(options.link) },
     };
   }
 
@@ -73,6 +73,12 @@ export default (ins: Feed) => {
     }
     base.rss.channel.category.push({ _text: category });
   });
+
+  if (extensions) {
+    extensions.map((extension) => {
+      base.rss.channel[extension.name] = extension.objects;
+    });
+  }
 
   /**
    * Feed URL
@@ -104,8 +110,8 @@ export default (ins: Feed) => {
     base.rss.channel["atom:link"] = {
       _attributes: {
         href: sanitize(options.hub),
-        rel: "hub"
-      }
+        rel: "hub",
+      },
     };
   }
 
@@ -191,6 +197,12 @@ export default (ins: Feed) => {
 
     if (entry.video) {
       item.enclosure = formatEnclosure(entry.video, "video");
+    }
+
+    if (entry.extensions) {
+      entry.extensions.map((extension) => {
+        item[extension.name] = extension.objects;
+      });
     }
 
     base.rss.channel.item.push(item);
